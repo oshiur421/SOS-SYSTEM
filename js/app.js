@@ -386,9 +386,9 @@
   // SOS BACK FASTAPI BACKEND INTEGRATION (http://127.0.0.1:8000)
   // =========================================================================
   const SOS_BACKEND_CONFIG = {
-    baseUrl: 'http://127.0.0.1:8000',
-    alertsEndpoint: 'http://127.0.0.1:8000/api/v1/alerts',
-    healthEndpoint: 'http://127.0.0.1:8000/api/v1/health'
+    baseUrl: 'https://sos-back-0w5z.onrender.com',
+    alertsEndpoint: 'https://sos-back-0w5z.onrender.com/api/v1/alerts',
+    healthEndpoint: 'https://sos-back-0w5z.onrender.com/api/v1/health'
   };
 
   /**
@@ -654,7 +654,7 @@
         updateServerConnectionStatus(true);
         const data = await response.json();
         const alerts = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
-        
+
         // Debug raw payload as explicitly requested
         console.log("Fetched alerts:", alerts);
 
