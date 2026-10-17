@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AEGIS Tactical Emergency SOS Command System - Real-time surveillance, threat telemetry, and emergency dispatch dashboard.">
+  <meta name="theme-color" content="#07090e">
+  <title>AEGIS // Emergency SOS Command Center</title>
+
+  <!-- Anti-caching and Anti-ServiceWorker enforcement: prevent any stale or intercepted responses -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <script>
+    // Immediately unregister all ServiceWorkers and clear CacheStorage
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (var reg of registrations) {
+          reg.unregister();
+          console.warn('[Anti-SW] Unregistered ServiceWorker:', reg.scope);
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (var name of names) {
+          caches.delete(name);
+          console.warn('[Anti-Cache] Deleted cache:', name);
+        }
+      });
+    }
+  </script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono & Chakra Petch for tactical HUD -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Leaflet.js Interactive Geospatial Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    /* Tactical dark-mode filter for standard OpenStreetMap tiles (No API key needed) */
+    .leaflet-tile-pane {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+  </style>
+</head>
+<body class="dark-theme">
+  <!-- Scanline CRT Ambient Overlay for Tactical Command Center -->
+  <div class="hud-scanlines" aria-hidden="true"></div>
+  <div class="hud-vignette" aria-hidden="true"></div>
+
+  <!-- Main Command Center Shell -->
+  <div class="command-container">
+
+    <!-- ========================================================================= -->
+    <!-- TOP HEADER BAR: SOS SYSTEM Title & Control Group                          -->
+    <!-- ========================================================================= -->
+    <header class="tactical-header" role="banner">
+      <div class="header-left">
+        <h2 class="cyber-title" data-text="SOS SYSTEM">SOS SYSTEM</h2>
+      </div>
+
+      <!-- Right: Control Group (Theme, Audio, System Status) -->
+      <div class="header-right header-controls">
+        <!-- a) Dark/Light Mode toggle button -->
+        <button id="btn-theme-toggle" class="tactical-btn btn-ghost" title="Toggle Dark/Light Mode" aria-label="Toggle dark/light mode">
+          <svg class="btn-icon" id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <span id="theme-status-text">LIGHT MODE</span>
+        </button>
+
+        <!-- b) Audio ON/OFF button -->
+        <button id="btn-audio-toggle" class="tactical-btn btn-ghost" title="Toggle Emergency Audio Feedback" aria-label="Audio alerts sound toggle">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path id="audio-icon-path" d="M11 5L6 9H2v6h4l5 4V5z M15.54 8.46a5 5 0 0 1 0 7.07 M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+          <span id="audio-status-text">AUDIO ON</span>
+        </button>
+
+        <!-- c) System Status Indicator -->
+        <div class="header-status-indicator status-online" id="header-status-indicator" role="status" aria-live="polite">
+          <span class="status-dot" id="status-dot" aria-hidden="true"></span>
+          <span class="status-label" id="status-label">SYSTEM: ACTIVE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub-header Emergency Banner (Dynamic - Flashes during Code Red / SOS) -->
+    <aside class="emergency-banner" id="emergency-banner" role="alert" aria-hidden="true">
+      <div class="banner-content">
+        <span class="banner-icon">⚠️</span>
+        <strong class="banner-title">CRITICAL SOS BROADCAST:</strong>
+        <span class="banner-msg" id="banner-message">ACTIVE DURESS BEACON DETECTED IN SECTOR 4B. TACTICAL FIRST RESPONDERS DISPATCHED.</span>
+        <span class="banner-timer font-mono" id="banner-incident-time">00:01:24</span>
+      </div>
+      <div class="banner-actions">
+        <button id="btn-banner-view" class="banner-action-btn">INTERCEPT FEED</button>
+        <button id="btn-banner-ack" class="banner-action-btn btn-ack">ACKNOWLEDGE</button>
+      </div>
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN DASHBOARD CONTENT AREA                                               -->
+    <!-- ========================================================================= -->
+    <main class="dashboard-body" role="main">
+
+      <!-- ======================================================================= -->
+      <!-- TOP CENTER: Live Camera Feed Placeholder Section                       -->
+      <!-- ======================================================================= -->
+      <section class="camera-hero-section" aria-labelledby="cam-feed-title">
+        <div class="tactical-panel camera-feed-panel">
+          
+          <!-- Camera Feed Header & Controls -->
+          <div class="panel-header camera-header">
+            <div class="cam-info-left">
+              <div class="cam-icon-tag" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 7l-7 5 7 5V7z"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
+              <div class="cam-title-wrap">
+                <h2 id="cam-feed-title" class="cam-heading">LIVE SURVEILLANCE &amp; OPTICAL TELEMETRY</h2>
+                <div class="cam-location-subtitle" id="active-cam-title">CAM-01 // WEST PERIMETER GATE - SECTOR 4B</div>
+              </div>
+            </div>
+
+            <!-- Camera Selector Switcher Tabs -->
+            <div class="cam-nav-tabs" role="tablist" aria-label="Camera Selection">
+              <button class="cam-tab active" data-cam-id="cam-1" id="tab-cam-1" role="tab" aria-selected="true">
+                <span class="tab-dot"></span>
+                <span>CAM-01 [GATE-4B]</span>
+              </button>
+              <button class="cam-tab" data-cam-id="cam-2" id="tab-cam-2" role="tab" aria-selected="false">
+                <span class="tab-dot"></span>
+                <span>CAM-02 [STORAGE-B]</span>
+              </button>
+              <button class="cam-tab" data-cam-id="cam-3" id="tab-cam-3" role="tab" aria-selected="false">
+                <span class="tab-dot"></span>
+                <span>CAM-03 [HELIPAD]</span>
+              </button>
+              <button class="cam-tab" data-cam-id="cam-4" id="tab-cam-4" role="tab" aria-selected="false">
+                <span class="tab-dot"></span>
+                <span>DRONE-01 [AERIAL]</span>
+              </button>
+            </div>
+
+            <!-- Cam Status Badges -->
+            <div class="cam-header-telemetry">
+              <span class="cam-badge rec-badge" id="telemetry-quality">
+                <span class="rec-blink-dot"></span> REC 720p HD
+              </span>
+              <span class="cam-badge fps-badge font-mono" id="telemetry-fps">0.0 FPS</span>
+              <span class="cam-badge bitrate-badge font-mono" id="telemetry-mbps">0.00 Mbps</span>
+            </div>
+          </div>
+
+          <!-- Video / Canvas Feed Viewport -->
+          <div class="camera-viewport-wrapper" id="camera-feed-container">
+            <img id="main-camera-feed" src="http://127.0.0.1:8001/video_feed" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;" alt="AI Live Feed">
+
+            <!-- Interactive On-Screen Floating Camera Controls -->
+            <div class="camera-floating-controls" role="toolbar" aria-label="Camera controls">
+              <!-- Vision Mode Selector -->
+              <div class="control-group vision-modes" role="radiogroup" aria-label="Surveillance Vision Mode">
+                <button class="hud-ctrl-btn active" id="btn-vision-optical" data-mode="optical" title="Standard Optical Color">
+                  <span>OPTICAL</span>
+                </button>
+                <button class="hud-ctrl-btn" id="btn-vision-nv" data-mode="nv" title="Night Vision Infra-Red">
+                  <span>NIGHT VISION</span>
+                </button>
+                <button class="hud-ctrl-btn" id="btn-vision-thermal" data-mode="thermal" title="FLIR Thermal Heat Signature">
+                  <span>THERMAL FLIR</span>
+                </button>
+              </div>
+
+              <!-- PTZ & Zoom Controls -->
+              <div class="control-group ptz-controls" aria-label="Pan Tilt Zoom">
+                <button class="hud-icon-btn" id="btn-pan-left" title="Pan Left" aria-label="Pan camera left">◀</button>
+                <button class="hud-icon-btn" id="btn-tilt-up" title="Tilt Up" aria-label="Tilt camera up">▲</button>
+                <button class="hud-icon-btn" id="btn-tilt-down" title="Tilt Down" aria-label="Tilt camera down">▼</button>
+                <button class="hud-icon-btn" id="btn-pan-right" title="Pan Right" aria-label="Pan camera right">▶</button>
+                <div class="ctrl-sep"></div>
+                <button class="hud-icon-btn" id="btn-zoom-in" title="Zoom In (+)" aria-label="Zoom in">+</button>
+                <button class="hud-icon-btn" id="btn-zoom-out" title="Zoom Out (-)" aria-label="Zoom out">−</button>
+                <button class="hud-icon-btn btn-reset" id="btn-cam-reset" title="Reset View" aria-label="Reset camera view">RESET</button>
+              </div>
+
+              <!-- Camera Auxiliary Tools -->
+              <div class="control-group aux-controls">
+                <button class="hud-ctrl-btn" id="btn-toggle-motion" title="Toggle AI Motion Tracking Box">
+                  <span class="btn-bullet"></span> AI TRACKING
+                </button>
+                <button class="hud-ctrl-btn" id="btn-cam-snapshot" title="Capture Snapshot Frame">
+                  <span>SNAPSHOT</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Camera Telemetry Strip (Below Viewport) -->
+          <div class="camera-footer-telemetry">
+            <div class="telemetry-item">
+              <span class="t-label">ENCRYPTION:</span>
+              <span class="t-value text-green">QUANTUM-RESISTANT 256</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="t-label">PAN ANGLE:</span>
+              <span class="t-value font-mono" id="telemetry-pan">0.0°</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="t-label">TILT ANGLE:</span>
+              <span class="t-value font-mono" id="telemetry-tilt">-4.2°</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="t-label">AMBIENT LIGHT:</span>
+              <span class="t-value font-mono" id="telemetry-lux">18.4 LUX</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="t-label">THERMAL SENSOR:</span>
+              <span class="t-value font-mono text-amber">CALIBRATED (21.4°C)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================================= -->
+      <!-- BELOW CAMERA: Tactical Split Grid                                      -->
+      <!-- Left/Main: Alert Log (Time, Location, Threat Level)                   -->
+      <!-- Right: Sector Geo-Spatial Radar & Rapid Dispatch Matrix                -->
+      <!-- ======================================================================= -->
+      <div class="bottom-command-grid">
+
+        <!-- ===================================================================== -->
+        <!-- ALERT LOG PANEL (Required: Time, Location, Threat Level Details)     -->
+        <!-- ===================================================================== -->
+        <section class="tactical-panel alert-log-panel" aria-labelledby="alert-log-heading">
+          
+          <!-- Alert Log Header & Threat Statistics -->
+          <div class="panel-header alert-panel-header">
+            <div class="alert-header-title-block">
+              <div class="alert-icon-ring" aria-hidden="true">
+                <span class="alert-bell-pulse"></span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </div>
+              <div>
+                <h2 id="alert-log-heading" class="panel-title">EMERGENCY ALERT LOG</h2>
+                <div class="panel-subtitle">REAL-TIME THREAT TELEMETRY &amp; INCIDENT DISPATCH QUEUE</div>
+              </div>
+            </div>
+
+            <!-- Threat Count Summary Chips -->
+            <div class="threat-counts-summary" aria-label="Threat level summary">
+              <div class="threat-stat-pill threat-crit" title="Critical Threats">
+                <span class="stat-dot dot-critical"></span>
+                <span class="stat-count font-mono" id="count-critical">0</span>
+                <span class="stat-name">CRITICAL</span>
+              </div>
+              <div class="threat-stat-pill threat-high" title="High Threats">
+                <span class="stat-dot dot-high"></span>
+                <span class="stat-count font-mono" id="count-high">0</span>
+                <span class="stat-name">HIGH</span>
+              </div>
+              <div class="threat-stat-pill threat-mod" title="Moderate Threats">
+                <span class="stat-dot dot-moderate"></span>
+                <span class="stat-count font-mono" id="count-moderate">0</span>
+                <span class="stat-name">MOD</span>
+              </div>
+              <div class="threat-stat-pill threat-low" title="Low Threat Advisories">
+                <span class="stat-dot dot-low"></span>
+                <span class="stat-count font-mono" id="count-low">0</span>
+                <span class="stat-name">LOW</span>
+              </div>
+            </div>
+
+            <!-- Quick Action Triggers: New SOS Dispatch & Purge Logs -->
+            <div class="alert-header-actions" style="display: flex; align-items: center; gap: 8px;">
+              <button id="btn-open-create-alert" class="tactical-btn btn-secondary-accent" title="Manually dispatch or register new emergency alert">
+                <span>+ NEW SOS DISPATCH</span>
+              </button>
+              <button id="btn-purge-alerts" class="tactical-btn btn-critical-solid" title="Purge all alert records and reset data">
+                <span>PURGE LOGS</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert Log Filter Toolbar -->
+          <div class="alert-filter-toolbar">
+            <!-- Filter by Threat Level Chips -->
+            <div class="filter-threat-chips" role="group" aria-label="Filter alerts by threat level">
+              <span class="filter-group-label">THREAT FILTER:</span>
+              <button class="threat-chip active" data-filter-threat="ALL">
+                <span>ALL (<span id="total-alerts-count">0</span>)</span>
+              </button>
+              <button class="threat-chip chip-critical" data-filter-threat="CRITICAL">
+                <span class="chip-dot"></span>
+                <span>CRITICAL</span>
+              </button>
+              <button class="threat-chip chip-high" data-filter-threat="HIGH">
+                <span class="chip-dot"></span>
+                <span>HIGH</span>
+              </button>
+              <button class="threat-chip chip-moderate" data-filter-threat="MODERATE">
+                <span class="chip-dot"></span>
+                <span>MODERATE</span>
+              </button>
+              <button class="threat-chip chip-low" data-filter-threat="LOW">
+                <span class="chip-dot"></span>
+                <span>LOW</span>
+              </button>
+            </div>
+
+            <!-- Search & Status Filter Controls -->
+            <div class="filter-search-group">
+              <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="alert-search-input" placeholder="Search by location, threat, ID or keyword..." aria-label="Search emergency alerts">
+                <button id="btn-clear-search" class="clear-search-btn" title="Clear search" aria-label="Clear search">✕</button>
+              </div>
+
+              <!-- Status Tab Selector -->
+              <div class="status-tab-selector" role="group" aria-label="Filter by incident status">
+                <button class="status-tab-btn active" data-status-filter="all">ALL</button>
+                <button class="status-tab-btn" data-status-filter="active">ACTIVE</button>
+                <button class="status-tab-btn" data-status-filter="acknowledged">ACK'D</button>
+                <button class="status-tab-btn" data-status-filter="resolved">RESOLVED</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert Cards Container (Scrollable High-Contrast List) -->
+          <div class="alert-cards-container" id="alert-list-container" role="feed" aria-busy="false" aria-label="Emergency alerts feed"></div>
+
+          <!-- Alert Log Footer / Batch Actions -->
+          <div class="alert-log-footer">
+            <div class="footer-status-text font-mono">
+              SHOWING <span id="visible-alert-count">0</span> OF <span id="total-pool-count">0</span> ALERTS • AUTO-REFRESH: 1 SEC
+            </div>
+            <div class="footer-actions">
+              <button id="btn-ack-all" class="tactical-btn btn-ghost-sm" title="Acknowledge all pending active alerts">ACKNOWLEDGE ALL</button>
+              <button id="btn-export-log" class="tactical-btn btn-ghost-sm" title="Export incident log to JSON">EXPORT LOG</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- RIGHT PANEL: Geo-Spatial Radar, Tactical Map & Rapid Dispatch Hub     -->
+        <!-- ===================================================================== -->
+        <aside class="tactical-panel dispatch-telemetry-panel" aria-label="Geospatial radar and response dispatch">
+          
+          <!-- Radar / Sector Geo-Spatial Interactive Map -->
+          <div class="radar-module-box">
+            <div class="radar-header">
+              <div class="radar-title-wrap">
+                <span class="radar-pulse-dot"></span>
+                <h3 class="module-title">SECTOR GEO-SPATIAL RADAR</h3>
+              </div>
+              <span class="radar-range font-mono" id="map-status-label">DAFFODIL SMART CITY</span>
+            </div>
+
+            <div id="incident-map" style="width: 100%; height: 260px; border-radius: 6px; z-index: 1;"></div>
+
+            <div class="radar-legend font-mono">
+              <span class="legend-item"><span class="legend-dot" style="background:#ff1744; box-shadow: 0 0 5px #ff1744;"></span> CRITICAL</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#ff9100; box-shadow: 0 0 5px #ff9100;"></span> HIGH</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#ffea00; box-shadow: 0 0 5px #ffea00;"></span> MODERATE</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#00e5ff; box-shadow: 0 0 5px #00e5ff;"></span> LOW</span>
+            </div>
+          </div>
+
+          <!-- Rapid Dispatch Units Status Matrix -->
+          <div class="dispatch-module-box">
+            <div class="module-header">
+              <h3 class="module-title">TACTICAL RESPONSE MATRIX</h3>
+              <span class="units-available font-mono text-green">3/4 READY</span>
+            </div>
+
+            <div class="dispatch-unit-list" id="dispatch-units-list">
+              <!-- Unit Alpha -->
+              <div class="unit-card unit-enroute">
+                <div class="unit-icon-badge">🚓</div>
+                <div class="unit-info">
+                  <div class="unit-name-row">
+                    <span class="unit-name font-bold">RAPID SQUAD ALPHA</span>
+                    <span class="unit-status-tag status-enroute">EN ROUTE</span>
+                  </div>
+                  <div class="unit-meta font-mono">ASSIGNED: SECTOR 4B • ETA: 01m 45s</div>
+                </div>
+                <button class="unit-action-btn" title="Contact Unit Alpha">RADIO</button>
+              </div>
+
+              <!-- Unit Bravo (Medical) -->
+              <div class="unit-card unit-onscene">
+                <div class="unit-icon-badge">🚑</div>
+                <div class="unit-info">
+                  <div class="unit-name-row">
+                    <span class="unit-name font-bold">MEDIC TEAM 02</span>
+                    <span class="unit-status-tag status-onscene">ON SCENE</span>
+                  </div>
+                  <div class="unit-meta font-mono">LOCATION: CHEMICAL DEPOT • TRIAGE ACTIVE</div>
+                </div>
+                <button class="unit-action-btn" title="Contact Medic Team">RADIO</button>
+              </div>
+
+              <!-- Drone Recon 01 -->
+              <div class="unit-card unit-standby">
+                <div class="unit-icon-badge">🛸</div>
+                <div class="unit-info">
+                  <div class="unit-name-row">
+                    <span class="unit-name font-bold">RECON DRONE 01</span>
+                    <span class="unit-status-tag status-standby">AIRBORNE</span>
+                  </div>
+                  <div class="unit-meta font-mono">ORBIT: SECTOR 7 HELIPAD • BATTERY: 88%</div>
+                </div>
+                <button class="unit-action-btn" title="Reroute Drone">ROUTE</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Health & Mesh Telemetry -->
+          <div class="system-mesh-box">
+            <div class="module-header">
+              <h3 class="module-title">SYSTEM TELEMETRY &amp; HARDWARE</h3>
+              <span class="text-cyan font-mono">ALL SYSTEMS GO</span>
+            </div>
+            <div class="mesh-telemetry-grid font-mono">
+              <div class="telemetry-cell">
+                <span class="cell-label">SOS SENSORS</span>
+                <span class="cell-value text-green">48 / 48 ACTIVE</span>
+              </div>
+              <div class="telemetry-cell">
+                <span class="cell-label">SATELLITE LINK</span>
+                <span class="cell-value text-green">14ms [SECURE]</span>
+              </div>
+              <div class="telemetry-cell">
+                <span class="cell-label">BACKUP POWER</span>
+                <span class="cell-value text-amber">98.2% [SOLAR/AUX]</span>
+              </div>
+              <div class="telemetry-cell">
+                <span class="cell-label">SIREN STATIONS</span>
+                <span class="cell-value text-green">8/8 ONLINE</span>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- MODALS: Manual Alert Creator & Alert Detail Inspector                     -->
+    <!-- ========================================================================= -->
+
+    <!-- Create / Dispatch Alert Modal -->
+    <div class="tactical-modal-backdrop" id="modal-create-alert" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-create-title">
+      <div class="tactical-modal-panel">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-beacon"></span>
+            <h3 id="modal-create-title" class="modal-title">DISPATCH NEW EMERGENCY SOS</h3>
+          </div>
+          <button id="btn-close-modal" class="modal-close-btn" aria-label="Close modal">✕</button>
+        </div>
+
+        <form id="form-create-alert" class="tactical-form">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="input-threat-level">THREAT SEVERITY LEVEL *</label>
+              <select id="input-threat-level" class="tactical-select" required>
+                <option value="CRITICAL">CRITICAL // LEVEL 1 (Immediate Life Threat)</option>
+                <option value="HIGH">HIGH // LEVEL 2 (Active Security Breach / Hazard)</option>
+                <option value="MODERATE">MODERATE // LEVEL 3 (Sensor Trip / Guarded)</option>
+                <option value="LOW">LOW // LEVEL 4 (Maintenance / Advisory)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="input-incident-type">INCIDENT CLASSIFICATION *</label>
+              <select id="input-incident-type" class="tactical-select" required>
+                <option value="Duress Beacon Triggered">Duress Beacon Triggered</option>
+                <option value="Perimeter Breach Detected">Perimeter Breach Detected</option>
+                <option value="Toxic Chemical / Gas Vapor Leak">Toxic Chemical / Gas Vapor Leak</option>
+                <option value="Medical Emergency / Triage">Medical Emergency / Triage</option>
+                <option value="Fire / Structural Anomaly">Fire / Structural Anomaly</option>
+                <option value="Unauthorized Vehicle Incursion">Unauthorized Vehicle Incursion</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="input-location-name">LOCATION / ZONE NAME *</label>
+              <input type="text" id="input-location-name" class="tactical-input" placeholder="e.g. Sub-Level 2 - Chemical Depot B" required>
+            </div>
+            <div class="form-group flex-1">
+              <label for="input-sector-code">SECTOR ID *</label>
+              <input type="text" id="input-sector-code" class="tactical-input" placeholder="e.g. Sector 4B" value="Sector 4B" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-details">INCIDENT DETAILS &amp; SENSOR READINGS</label>
+            <textarea id="input-details" class="tactical-textarea" rows="3" placeholder="Provide telemetry notes, operator badges involved, victim status, or immediate response instructions..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="input-assigned-camera">LINKED SURVEILLANCE CAM</label>
+              <select id="input-assigned-camera" class="tactical-select">
+                <option value="CAM-01">CAM-01 (West Perimeter Gate)</option>
+                <option value="CAM-02">CAM-02 (Chemical Storage Depot)</option>
+                <option value="CAM-03">CAM-03 (Command Helipad)</option>
+                <option value="DRONE-01">DRONE-01 (Aerial Overwatch)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="input-auto-dispatch">AUTO-DISPATCH TACTICAL UNIT</label>
+              <select id="input-auto-dispatch" class="tactical-select">
+                <option value="ALPHA">Dispatch Rapid Squad Alpha</option>
+                <option value="MEDIC">Dispatch Medic Team 02</option>
+                <option value="DRONE">Deploy Recon Drone 01</option>
+                <option value="NONE">Log Only (No Auto-Dispatch)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" id="btn-cancel-modal" class="tactical-btn btn-ghost">CANCEL</button>
+            <button type="submit" class="tactical-btn btn-critical-solid">BROADCAST EMERGENCY SOS</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Alert Detail & Dispatch Action Drawer / Modal -->
+    <div class="tactical-modal-backdrop" id="modal-alert-details" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-detail-title">
+      <div class="tactical-modal-panel modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="detail-threat-pill" id="detail-threat-badge">CRITICAL</span>
+            <h3 id="modal-detail-title" class="modal-title">INCIDENT TELEMETRY DOSSIER</h3>
+          </div>
+          <button id="btn-close-detail-modal" class="modal-close-btn" aria-label="Close modal">✕</button>
+        </div>
+
+        <div class="modal-body-detail" id="modal-detail-body">
+          <!-- Top Grid: Incident ID and Timestamp -->
+          <div class="dossier-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">INCIDENT IDENTIFIER</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: #fff;" class="font-mono" id="dossier-incident-id">#--</div>
+              <div style="font-size: 0.75rem; color: var(--color-low); margin-top: 4px;" id="dossier-incident-title">--</div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">TIMESTAMP &amp; DURATION</div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: #fff;" class="font-mono" id="dossier-timestamp">--:--:--</div>
+              <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;" id="dossier-elapsed">Elapsed: --</div>
+            </div>
+          </div>
+
+          <!-- Location & Coordinates -->
+          <div style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">LOCATION &amp; GEODETIC COORDINATES</div>
+            <div style="color: #fff; font-size: 0.9rem; font-weight: 600;" id="dossier-location">📍 Daffodil Smart City - Ashulia, Dhaka</div>
+            <div class="font-mono text-cyan" style="font-size: 0.75rem; margin-top: 2px;" id="dossier-coords">GPS: LAT 23.8769, LON 90.3204</div>
+          </div>
+
+          <!-- OPTICAL SURVEILLANCE SNAPSHOT & INCIDENT TELEMETRY -->
+          <div id="dossier-telemetry-section" style="background: rgba(0,0,0,0.4); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.05em;">
+              <span>PRIMARY OPTICAL SNAPSHOT // INCIDENT VISUAL TELEMETRY</span>
+              <span id="dossier-snapshot-badge" style="color: #ff3366; font-size: 0.68rem; font-weight: 700; display: none;" class="font-mono">LIVE AI OPTICAL CAPTURE</span>
+            </div>
+
+            <!-- Prominently Expanded Optical Snapshot Image Container -->
+            <div id="dossier-snapshot-container" style="display: none; width: 100%; border-radius: 6px; overflow: hidden; background: #050811; border: 1px solid rgba(255, 23, 68, 0.45); box-shadow: 0 0 24px rgba(255, 23, 68, 0.25); text-align: center;">
+              <img id="dossier-snapshot-img" src="" alt="Live Optical Incident Snapshot" style="width: 100%; max-height: 440px; min-height: 220px; object-fit: contain; display: block; margin: 0 auto; background: #070a10;">
+            </div>
+
+            <!-- Fallback when no optical snapshot is available -->
+            <div id="dossier-snapshot-fallback" style="display: none; padding: 28px 16px; text-align: center; background: rgba(255, 23, 68, 0.05); border: 1px dashed rgba(255, 23, 68, 0.25); border-radius: 6px;">
+              <div style="font-size: 1.8rem; margin-bottom: 6px;">📷</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #fff; font-family: var(--font-tactical); letter-spacing: 0.06em;">NO OPTICAL SNAPSHOT AVAILABLE</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono);">Hardware camera feed was offline, disengaged, or occupied during distress detection.</div>
+            </div>
+          </div>
+
+          <!-- Incident Details -->
+          <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">INCIDENT LOG DETAILS</div>
+            <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-primary); margin: 0;" id="dossier-description">Emergency telemetry alert registered.</p>
+          </div>
+
+          <!-- Responder Matrix -->
+          <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">ASSIGNED RESPONDER MATRIX</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;" id="dossier-assigned-unit">Rapid Squad Alpha</div>
+            </div>
+            <button type="button" class="tactical-btn btn-secondary-accent" id="btn-dossier-radio" onclick="alert('Dispatch radio transmission active on emergency channel 4');">
+              DISPATCH RADIO
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer" id="modal-detail-footer">
+          <!-- Dynamic action buttons -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Audio Feedback Element -->
+    <div id="toast-container" class="tactical-toast-shelf" aria-live="assertive"></div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
