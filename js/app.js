@@ -1083,7 +1083,7 @@
   // Connects to Single Camera Video Server on port 8001 for live video feed,
   // hardware telemetry polling, digital PTZ adjustments, and vision filters.
   // =========================================================================
-  const CAMERA_SERVER_URL = 'http://127.0.0.1:8001';
+  const CAMERA_SERVER_URL = 'https://sos-ai-sensor-1.onrender.com';
   const getCameraServerApi = () => CAMERA_SERVER_URL;
   window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
 
