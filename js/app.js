@@ -401,15 +401,37 @@
     || (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('VOICE_SERVER_URL'))
     || CAMERA_SERVER_URL;
 
-  // Expose configurable variables globally on window object for dynamic configuration
+  // Standard function declarations for microservice endpoint resolution (safely hoisted)
+  function getCameraServerUrl() {
+    return (typeof window !== 'undefined' && window.CAMERA_SERVER_URL)
+      || CAMERA_SERVER_URL
+      || DEFAULT_REMOTE_GATEWAY;
+  }
+
+  function getVoiceServerUrl() {
+    return (typeof window !== 'undefined' && window.VOICE_SERVER_URL)
+      || VOICE_SERVER_URL
+      || getCameraServerUrl();
+  }
+
+  function getCameraServerApi() {
+    return getCameraServerUrl();
+  }
+
+  function getVoiceServerApi() {
+    return getVoiceServerUrl();
+  }
+
+  // Expose configurable variables and endpoint resolvers globally on window object
   if (typeof window !== 'undefined') {
     if (!window.DEFAULT_REMOTE_GATEWAY) window.DEFAULT_REMOTE_GATEWAY = DEFAULT_REMOTE_GATEWAY;
     if (!window.CAMERA_SERVER_URL) window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
     if (!window.VOICE_SERVER_URL) window.VOICE_SERVER_URL = VOICE_SERVER_URL;
+    window.getCameraServerUrl = getCameraServerUrl;
+    window.getVoiceServerUrl = getVoiceServerUrl;
+    window.getCameraServerApi = getCameraServerApi;
+    window.getVoiceServerApi = getVoiceServerApi;
   }
-
-  const getCameraServerUrl = () => (typeof window !== 'undefined' && window.CAMERA_SERVER_URL) || CAMERA_SERVER_URL || DEFAULT_REMOTE_GATEWAY;
-  const getVoiceServerUrl = () => (typeof window !== 'undefined' && window.VOICE_SERVER_URL) || VOICE_SERVER_URL || getCameraServerUrl();
 
   const SOS_BACKEND_CONFIG = {
     get baseUrl() {
@@ -1124,7 +1146,6 @@
   // Connects to Camera Server / Microservice for live video feed,
   // hardware telemetry polling, digital PTZ adjustments, and vision filters.
   // =========================================================================
-  const getCameraServerApi = () => getCameraServerUrl();
   const CAMERA_FRAME_API_URL = `${getCameraServerUrl().replace(/\/+$/, '')}/api/camera/frame`;
 
   // -------------------------------------------------------------------------
@@ -1491,7 +1512,6 @@
   // Streams 3-second audio chunks directly to VOICE_SERVER_URL/api/voice/audio
   // with resilient fallback to the central camera gateway if unreachable.
   // =========================================================================
-  const getVoiceServerApi = () => getVoiceServerUrl();
   const VOICE_AUDIO_API_URL = `${getVoiceServerUrl().replace(/\/+$/, '')}/api/voice/audio`;
   let isMicrophoneCapturing = false;
 
