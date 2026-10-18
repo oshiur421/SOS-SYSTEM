@@ -383,12 +383,44 @@
   let sessionStartTime = Date.now();
 
   // =========================================================================
-  // SOS BACK FASTAPI BACKEND INTEGRATION (http://127.0.0.1:8000)
+  // DISTRIBUTED MICROSERVICES ARCHITECTURE CONFIGURATION
+  // Configurable global variables for distributed microservices:
+  // - CAMERA_SERVER_URL: for streaming frames, telemetry, PTZ, and syncing alerts
+  // - VOICE_SERVER_URL: for sending audio chunks directly to voice microservice
+  // Intelligent fallback chain: window -> localStorage -> default cloud gateway
   // =========================================================================
+  const DEFAULT_REMOTE_GATEWAY = 'https://sos-ai-sensor-1.onrender.com';
+
+  // Configurable CAMERA_SERVER_URL (for sending frames, controls, and fetching alerts)
+  const CAMERA_SERVER_URL = (typeof window !== 'undefined' && window.CAMERA_SERVER_URL)
+    || (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('CAMERA_SERVER_URL'))
+    || DEFAULT_REMOTE_GATEWAY;
+
+  // Configurable VOICE_SERVER_URL (for sending audio directly to the voice microservice)
+  const VOICE_SERVER_URL = (typeof window !== 'undefined' && window.VOICE_SERVER_URL)
+    || (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('VOICE_SERVER_URL'))
+    || CAMERA_SERVER_URL;
+
+  // Expose configurable variables globally on window object for dynamic configuration
+  if (typeof window !== 'undefined') {
+    if (!window.DEFAULT_REMOTE_GATEWAY) window.DEFAULT_REMOTE_GATEWAY = DEFAULT_REMOTE_GATEWAY;
+    if (!window.CAMERA_SERVER_URL) window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
+    if (!window.VOICE_SERVER_URL) window.VOICE_SERVER_URL = VOICE_SERVER_URL;
+  }
+
+  const getCameraServerUrl = () => (typeof window !== 'undefined' && window.CAMERA_SERVER_URL) || CAMERA_SERVER_URL || DEFAULT_REMOTE_GATEWAY;
+  const getVoiceServerUrl = () => (typeof window !== 'undefined' && window.VOICE_SERVER_URL) || VOICE_SERVER_URL || getCameraServerUrl();
+
   const SOS_BACKEND_CONFIG = {
-    baseUrl: 'https://sos-ai-sensor-1.onrender.com',
-    alertsEndpoint: 'https://sos-ai-sensor-1.onrender.com/api/v1/alerts',
-    healthEndpoint: 'https://sos-ai-sensor-1.onrender.com/api/v1/health'
+    get baseUrl() {
+      return getCameraServerUrl();
+    },
+    get alertsEndpoint() {
+      return `${this.baseUrl.replace(/\/+$/, '')}/api/v1/alerts`;
+    },
+    get healthEndpoint() {
+      return `${this.baseUrl.replace(/\/+$/, '')}/api/v1/health`;
+    }
   };
 
   /**
@@ -741,6 +773,12 @@
   window.getExactTimeString = getExactTimeString;
   window.getRelativeTimeString = getRelativeTimeString;
   window.SOS_BACKEND_CONFIG = SOS_BACKEND_CONFIG;
+  window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
+  window.VOICE_SERVER_URL = VOICE_SERVER_URL;
+  window.getCameraServerUrl = getCameraServerUrl;
+  window.getVoiceServerUrl = getVoiceServerUrl;
+  window.getCameraServerApi = getCameraServerApi;
+  window.getVoiceServerApi = getVoiceServerApi;
 
   // DOM Elements
   const elClockLocal = document.getElementById('clock-local');
@@ -1083,13 +1121,11 @@
 
   // =========================================================================
   // CAMERA STREAM CONTROLLER & TELEMETRY
-  // Connects to Single Camera Video Server on port 8001 for live video feed,
+  // Connects to Camera Server / Microservice for live video feed,
   // hardware telemetry polling, digital PTZ adjustments, and vision filters.
   // =========================================================================
-  const CAMERA_SERVER_URL = 'https://sos-ai-sensor-1.onrender.com';
-  const CAMERA_FRAME_API_URL = `${CAMERA_SERVER_URL}/api/camera/frame`;
-  const getCameraServerApi = () => CAMERA_SERVER_URL;
-  window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
+  const getCameraServerApi = () => getCameraServerUrl();
+  const CAMERA_FRAME_API_URL = `${getCameraServerUrl().replace(/\/+$/, '')}/api/camera/frame`;
 
   // -------------------------------------------------------------------------
   // LOCAL WEBCAM & CLIENT-SIDE FRAME STREAMING TO AI SENSOR BACKEND
@@ -1197,7 +1233,9 @@
     const base64Image = frameCaptureCanvas.toDataURL('image/jpeg', 0.75);
     isSendingFrame = true;
 
-    fetch(CAMERA_FRAME_API_URL, {
+    const targetApiUrl = `${getCameraServerUrl().replace(/\/+$/, '')}/api/camera/frame`;
+
+    fetch(targetApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -1253,7 +1291,7 @@
     // Ensure main video feed points directly to single stream endpoint if local webcam is not active
     const mainVideoFeed = document.getElementById('main-camera-feed') || document.querySelector('#camera-feed-container img');
     if (mainVideoFeed && !isLocalWebcamActive) {
-      const targetSrc = `${CAMERA_SERVER_URL}/video_feed`;
+      const targetSrc = `${getCameraServerUrl().replace(/\/+$/, '')}/video_feed`;
       if (mainVideoFeed.src !== targetSrc) {
         mainVideoFeed.src = targetSrc;
       }
@@ -1281,7 +1319,7 @@
         thermal: 'THERMAL'
       };
       const filterMode = modeMap[mode] || 'NORMAL';
-      await fetch(`${CAMERA_SERVER_URL}/api/camera/filter`, {
+      await fetch(`${getCameraServerUrl().replace(/\/+$/, '')}/api/camera/filter`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filter: filterMode })
@@ -1293,7 +1331,7 @@
 
   async function syncCameraPTZToServer() {
     try {
-      await fetch(`${CAMERA_SERVER_URL}/api/camera/ptz`, {
+      await fetch(`${getCameraServerUrl().replace(/\/+$/, '')}/api/camera/ptz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1312,7 +1350,7 @@
   // ---------------------------------------------------------------------------
   async function fetchCameraTelemetry() {
     try {
-      const response = await fetch(`${CAMERA_SERVER_URL}/status`, { cache: 'no-store' });
+      const response = await fetch(`${getCameraServerUrl().replace(/\/+$/, '')}/status`, { cache: 'no-store' });
       if (!response.ok) return;
       const data = await response.json();
 
@@ -1450,9 +1488,11 @@
 
   // =========================================================================
   // CONTINUOUS MICROPHONE AUDIO CAPTURE (AI Voice Emergency Detection)
-  // Streams 3-second audio chunks from client microphone to cloud AI detector
+  // Streams 3-second audio chunks directly to VOICE_SERVER_URL/api/voice/audio
+  // with resilient fallback to the central camera gateway if unreachable.
   // =========================================================================
-  const VOICE_AUDIO_API_URL = 'https://sos-ai-sensor-1.onrender.com/api/voice/audio';
+  const getVoiceServerApi = () => getVoiceServerUrl();
+  const VOICE_AUDIO_API_URL = `${getVoiceServerUrl().replace(/\/+$/, '')}/api/voice/audio`;
   let isMicrophoneCapturing = false;
 
   async function initContinuousAudioCapture() {
@@ -1476,10 +1516,51 @@
           formData.append('file', event.data, 'audio.wav');
 
           try {
-            const response = await fetch(VOICE_AUDIO_API_URL, {
-              method: 'POST',
-              body: formData
-            });
+            const currentVoiceServer = getVoiceServerUrl().replace(/\/+$/, '');
+            const targetVoiceUrl = `${currentVoiceServer}/api/voice/audio`;
+            const currentCameraServer = getCameraServerUrl().replace(/\/+$/, '');
+            const fallbackVoiceUrl = `${currentCameraServer}/api/voice/audio`;
+
+            let response;
+            try {
+              // Direct dispatch to dedicated voice microservice
+              response = await fetch(targetVoiceUrl, {
+                method: 'POST',
+                body: formData
+              });
+
+              // Fallback logic: if direct voice microservice returns server error (502/503/404) and fallback gateway is distinct, attempt fallback
+              if (!response.ok && (response.status === 502 || response.status === 503 || response.status === 404) && targetVoiceUrl !== fallbackVoiceUrl) {
+                console.warn(`[Voice Capture] Direct voice server responded with HTTP ${response.status}. Attempting fallback to camera gateway: ${fallbackVoiceUrl}`);
+                try {
+                  const fallbackResp = await fetch(fallbackVoiceUrl, {
+                    method: 'POST',
+                    body: formData
+                  });
+                  if (fallbackResp.ok) {
+                    response = fallbackResp;
+                  }
+                } catch (fallbackErr) {
+                  console.warn('[Voice Capture] Fallback to camera gateway also failed:', fallbackErr.message);
+                }
+              }
+            } catch (netErr) {
+              // Fallback logic: if direct voice microservice is unreachable, fallback to camera gateway
+              if (targetVoiceUrl !== fallbackVoiceUrl) {
+                console.warn(`[Voice Capture] Direct voice microservice unreachable at ${targetVoiceUrl} (${netErr.message}). Attempting fallback to: ${fallbackVoiceUrl}`);
+                try {
+                  response = await fetch(fallbackVoiceUrl, {
+                    method: 'POST',
+                    body: formData
+                  });
+                } catch (fallbackNetErr) {
+                  console.error('[Voice Capture] Fallback to camera gateway also failed:', fallbackNetErr);
+                  throw netErr;
+                }
+              } else {
+                throw netErr;
+              }
+            }
 
             if (!response.ok) {
               const errText = await response.text();
