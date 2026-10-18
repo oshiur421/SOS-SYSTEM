@@ -386,9 +386,9 @@
   // SOS BACK FASTAPI BACKEND INTEGRATION (http://127.0.0.1:8000)
   // =========================================================================
   const SOS_BACKEND_CONFIG = {
-    baseUrl: 'https://sos-back-0w5z.onrender.com',
-    alertsEndpoint: 'https://sos-back-0w5z.onrender.com/api/v1/alerts',
-    healthEndpoint: 'https://sos-back-0w5z.onrender.com/api/v1/health'
+    baseUrl: 'https://sos-ai-sensor-1.onrender.com',
+    alertsEndpoint: 'https://sos-ai-sensor-1.onrender.com/api/v1/alerts',
+    healthEndpoint: 'https://sos-ai-sensor-1.onrender.com/api/v1/health'
   };
 
   /**
@@ -662,7 +662,10 @@
         if (elAlertListContainer) {
           elAlertListContainer.innerHTML = '';
         }
-        alertsState = alerts.map(mapBackendAlertToFrontend);
+        const backendAlerts = alerts.map(mapBackendAlertToFrontend);
+        const backendIds = new Set(backendAlerts.map(a => String(a.id)));
+        const localVoiceAlerts = alertsState.filter(a => !backendIds.has(String(a.id)) && a.detection_source === 'AI-VOICE-SENSOR');
+        alertsState = [...localVoiceAlerts, ...backendAlerts];
         renderAlertList();
         evaluateSystemThreatPosture();
         updateMapMarkers(alertsState);
@@ -1486,6 +1489,57 @@
 
             const data = await response.json();
             console.log('[Voice Capture] Audio chunk upload response:', data);
+
+            // Automatically inject a new alert into the 'EMERGENCY ALERT LOG' UI table when a threat is detected
+            const threatLevel = (data.threat_level || '').toUpperCase();
+            const recognizedKeyword = data.recognized_keyword || null;
+
+            if ((threatLevel && threatLevel !== 'NONE') || recognizedKeyword) {
+              console.warn(`[Voice Capture] 🚨 Acoustic Threat Detected: Keyword="${recognizedKeyword}", ThreatLevel="${threatLevel}"`);
+
+              const alertId = data.alert_id || Date.now();
+              const timestamp = new Date().toISOString();
+              const keywordDisplay = recognizedKeyword ? `"${recognizedKeyword.toUpperCase()}"` : 'DISTRESS';
+
+              const newVoiceAlert = mapBackendAlertToFrontend({
+                id: alertId,
+                title: `Acoustic Distress: ${keywordDisplay} Detected`,
+                threat_level: threatLevel || 'HIGH',
+                detection_source: 'AI-VOICE-SENSOR',
+                timestamp: timestamp,
+                created_at: timestamp,
+                latitude: 23.8769,
+                longitude: 90.3204,
+                location_name: 'Central Command - Acoustic Surveillance Zone',
+                description: data.transcript
+                  ? `Voice analysis detected keyword ${keywordDisplay}. Transcript: "${data.transcript}"`
+                  : `Acoustic threat triggered by keyword ${keywordDisplay}.`,
+                status: 'active',
+                raw_detection_data: {
+                  keyword: recognizedKeyword,
+                  transcript: data.transcript || '',
+                  sensor: 'voice_emergency',
+                  sector: 'Sector 4B',
+                  assignedUnit: 'Rapid Acoustic Response Squad'
+                }
+              });
+
+              // Avoid duplicates if alert already present in alertsState
+              const exists = alertsState.some(a => String(a.id) === String(newVoiceAlert.id));
+              if (!exists) {
+                alertsState.unshift(newVoiceAlert);
+
+                // Re-render the EMERGENCY ALERT LOG table & update threat posture
+                renderAlertList();
+                evaluateSystemThreatPosture();
+                updateThreatSummaryCounters();
+                updateMapMarkers(alertsState);
+
+                // Play emergency alarm and trigger toast alert
+                audio.playEmergencyAlarm();
+                showToast(`🚨 VOICE SOS: Distress Keyword ${keywordDisplay} Detected! Alert logged.`, true);
+              }
+            }
           } catch (err) {
             console.error('[Voice Capture] Error uploading audio chunk:', err);
           }
