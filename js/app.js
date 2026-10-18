@@ -1084,8 +1084,143 @@
   // hardware telemetry polling, digital PTZ adjustments, and vision filters.
   // =========================================================================
   const CAMERA_SERVER_URL = 'https://sos-ai-sensor-1.onrender.com';
+  const CAMERA_FRAME_API_URL = `${CAMERA_SERVER_URL}/api/camera/frame`;
   const getCameraServerApi = () => CAMERA_SERVER_URL;
   window.CAMERA_SERVER_URL = CAMERA_SERVER_URL;
+
+  // -------------------------------------------------------------------------
+  // LOCAL WEBCAM & CLIENT-SIDE FRAME STREAMING TO AI SENSOR BACKEND
+  // Captures local video feed via navigator.mediaDevices.getUserMedia({ video: true }),
+  // displays local <video> feed inside the dashboard viewport, and streams
+  // base64 video frames every 500ms to /api/camera/frame for real-time AI processing.
+  // -------------------------------------------------------------------------
+  let localWebcamStream = null;
+  let isLocalWebcamActive = false;
+  let frameCaptureIntervalId = null;
+  let isSendingFrame = false;
+  let frameCaptureCanvas = null;
+
+  async function initLocalWebcamCapture() {
+    if (isLocalWebcamActive) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('[Webcam AI] navigator.mediaDevices.getUserMedia is not supported in this browser.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      localWebcamStream = stream;
+      isLocalWebcamActive = true;
+      console.log('[Webcam AI] Local webcam access granted.');
+
+      const cameraContainer = document.getElementById('camera-feed-container');
+      const remoteImgFeed = document.getElementById('main-camera-feed');
+
+      let localVideoFeed = document.getElementById('local-webcam-feed');
+      if (!localVideoFeed) {
+        localVideoFeed = document.createElement('video');
+        localVideoFeed.id = 'local-webcam-feed';
+        localVideoFeed.autoplay = true;
+        localVideoFeed.muted = true;
+        localVideoFeed.playsInline = true;
+        localVideoFeed.style.width = '100%';
+        localVideoFeed.style.height = '100%';
+        localVideoFeed.style.objectFit = 'cover';
+        localVideoFeed.style.borderRadius = '5px';
+        localVideoFeed.style.display = 'block';
+
+        if (cameraContainer) {
+          if (remoteImgFeed) {
+            remoteImgFeed.style.display = 'none';
+            remoteImgFeed.removeAttribute('src'); // Stop pulling remote image source
+            cameraContainer.insertBefore(localVideoFeed, remoteImgFeed);
+          } else {
+            cameraContainer.prepend(localVideoFeed);
+          }
+        }
+      } else {
+        localVideoFeed.style.display = 'block';
+        if (remoteImgFeed) {
+          remoteImgFeed.style.display = 'none';
+        }
+      }
+
+      localVideoFeed.srcObject = stream;
+      localVideoFeed.play().catch(playErr => {
+        console.warn('[Webcam AI] Video play error:', playErr);
+      });
+
+      // Start frame capture loop: capture frame every 500ms and POST to /api/camera/frame
+      if (frameCaptureIntervalId) {
+        clearInterval(frameCaptureIntervalId);
+      }
+      frameCaptureIntervalId = setInterval(() => {
+        captureAndSendWebcamFrame(localVideoFeed);
+      }, 500);
+
+      console.log('[Webcam AI] Local video feed active and 500ms frame capture loop initiated.');
+    } catch (err) {
+      console.error('[Webcam AI] Error starting local webcam:', err);
+    }
+  }
+
+  function captureAndSendWebcamFrame(videoEl) {
+    if (!videoEl || videoEl.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      return;
+    }
+    if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
+      return;
+    }
+    if (isSendingFrame) {
+      // Prevent stacking if request is still in flight
+      return;
+    }
+
+    if (!frameCaptureCanvas) {
+      frameCaptureCanvas = document.createElement('canvas');
+    }
+
+    const width = videoEl.videoWidth;
+    const height = videoEl.videoHeight;
+    if (frameCaptureCanvas.width !== width || frameCaptureCanvas.height !== height) {
+      frameCaptureCanvas.width = width;
+      frameCaptureCanvas.height = height;
+    }
+
+    const ctx = frameCaptureCanvas.getContext('2d');
+    ctx.drawImage(videoEl, 0, 0, width, height);
+
+    const base64Image = frameCaptureCanvas.toDataURL('image/jpeg', 0.75);
+    isSendingFrame = true;
+
+    fetch(CAMERA_FRAME_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        frame: base64Image,
+        image: base64Image
+      })
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error(`[Webcam AI] /api/camera/frame error (${response.status}):`, errText);
+          return;
+        }
+        const data = await response.json();
+      })
+      .catch((err) => {
+        console.error('[Webcam AI] Error uploading camera frame:', err);
+      })
+      .finally(() => {
+        isSendingFrame = false;
+      });
+  }
+
+  window.initLocalWebcamCapture = initLocalWebcamCapture;
 
   // Switch camera function (updates HUD telemetry and preset overlays)
   function switchCamera(camKey) {
@@ -1112,9 +1247,9 @@
     ptz.pan = preset.pan;
     ptz.tilt = preset.tilt;
 
-    // Ensure main video feed points directly to single stream endpoint
+    // Ensure main video feed points directly to single stream endpoint if local webcam is not active
     const mainVideoFeed = document.getElementById('main-camera-feed') || document.querySelector('#camera-feed-container img');
-    if (mainVideoFeed) {
+    if (mainVideoFeed && !isLocalWebcamActive) {
       const targetSrc = `${CAMERA_SERVER_URL}/video_feed`;
       if (mainVideoFeed.src !== targetSrc) {
         mainVideoFeed.src = targetSrc;
@@ -2520,18 +2655,24 @@
     }
   });
 
+  // Initialize local webcam video capture & frame streaming
+  initLocalWebcamCapture();
+
   // Initialize continuous microphone audio capture
   initContinuousAudioCapture();
 
   // If user interaction is required by browser security policy to access media devices,
   // ensure capture initiates upon the first user interaction.
-  const triggerAudioCaptureOnInteraction = () => {
+  const triggerMediaCaptureOnInteraction = () => {
+    if (!isLocalWebcamActive) {
+      initLocalWebcamCapture();
+    }
     if (!isMicrophoneCapturing) {
       initContinuousAudioCapture();
     }
   };
-  window.addEventListener('click', triggerAudioCaptureOnInteraction, { once: true });
-  window.addEventListener('keydown', triggerAudioCaptureOnInteraction, { once: true });
+  window.addEventListener('click', triggerMediaCaptureOnInteraction, { once: true });
+  window.addEventListener('keydown', triggerMediaCaptureOnInteraction, { once: true });
 
   console.log('AEGIS Emergency SOS Command System Initialized.');
 })();
