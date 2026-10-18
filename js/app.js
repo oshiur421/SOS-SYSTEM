@@ -1311,6 +1311,67 @@
   });
 
   // =========================================================================
+  // CONTINUOUS MICROPHONE AUDIO CAPTURE (AI Voice Emergency Detection)
+  // Streams 3-second audio chunks from client microphone to cloud AI detector
+  // =========================================================================
+  const VOICE_AUDIO_API_URL = 'https://sos-ai-sensor-1.onrender.com/api/voice/audio';
+  let isMicrophoneCapturing = false;
+
+  async function initContinuousAudioCapture() {
+    if (isMicrophoneCapturing) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('[Voice Capture] navigator.mediaDevices.getUserMedia is not supported in this browser.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      isMicrophoneCapturing = true;
+      console.log('[Voice Capture] Microphone access granted. Starting continuous audio recording...');
+
+      const mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data && event.data.size > 0) {
+          const formData = new FormData();
+          formData.append('file', event.data, 'audio.wav');
+
+          try {
+            const response = await fetch(VOICE_AUDIO_API_URL, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!response.ok) {
+              const errText = await response.text();
+              console.error(`[Voice Capture] Server error (${response.status}):`, errText);
+              return;
+            }
+
+            const data = await response.json();
+            console.log('[Voice Capture] Audio chunk upload response:', data);
+          } catch (err) {
+            console.error('[Voice Capture] Error uploading audio chunk:', err);
+          }
+        }
+      };
+
+      mediaRecorder.onerror = (err) => {
+        console.error('[Voice Capture] MediaRecorder error:', err);
+      };
+
+      // Record audio in 3-second chunks (3000 ms)
+      mediaRecorder.start(3000);
+      console.log('[Voice Capture] MediaRecorder started with 3-second chunks.');
+    } catch (err) {
+      console.error('[Voice Capture] Error accessing microphone:', err);
+    }
+  }
+
+  window.initContinuousAudioCapture = initContinuousAudioCapture;
+
+  // =========================================================================
   // =========================================================================
   // LEAFLET INTERACTIVE INCIDENT MAP & RADAR ENGINE
   // =========================================================================
@@ -2458,6 +2519,19 @@
       console.warn('[SOS-BACK API] Backend is currently offline. Actions require online server.');
     }
   });
+
+  // Initialize continuous microphone audio capture
+  initContinuousAudioCapture();
+
+  // If user interaction is required by browser security policy to access media devices,
+  // ensure capture initiates upon the first user interaction.
+  const triggerAudioCaptureOnInteraction = () => {
+    if (!isMicrophoneCapturing) {
+      initContinuousAudioCapture();
+    }
+  };
+  window.addEventListener('click', triggerAudioCaptureOnInteraction, { once: true });
+  window.addEventListener('keydown', triggerAudioCaptureOnInteraction, { once: true });
 
   console.log('AEGIS Emergency SOS Command System Initialized.');
 })();

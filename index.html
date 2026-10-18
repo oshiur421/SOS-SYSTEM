@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AEGIS Tactical Emergency SOS Command System - Real-time surveillance, threat telemetry, and emergency dispatch dashboard.">
+  <meta name="description"
+    content="AEGIS Tactical Emergency SOS Command System - Real-time surveillance, threat telemetry, and emergency dispatch dashboard.">
   <meta name="theme-color" content="#07090e">
   <title>AEGIS // Emergency SOS Command Center</title>
 
@@ -15,7 +17,7 @@
   <script>
     // Immediately unregister all ServiceWorkers and clear CacheStorage
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
         for (var reg of registrations) {
           reg.unregister();
           console.warn('[Anti-SW] Unregistered ServiceWorker:', reg.scope);
@@ -23,7 +25,7 @@
       });
     }
     if ('caches' in window) {
-      caches.keys().then(function(names) {
+      caches.keys().then(function (names) {
         for (var name of names) {
           caches.delete(name);
           console.warn('[Anti-Cache] Deleted cache:', name);
@@ -48,6 +50,7 @@
     }
   </style>
 </head>
+
 <body class="dark-theme">
   <!-- Scanline CRT Ambient Overlay for Tactical Command Center -->
   <div class="hud-scanlines" aria-hidden="true"></div>
@@ -67,24 +70,29 @@
       <!-- Right: Control Group (Theme, Audio, System Status) -->
       <div class="header-right header-controls">
         <!-- a) Dark/Light Mode toggle button -->
-        <button id="btn-theme-toggle" class="tactical-btn btn-ghost" title="Toggle Dark/Light Mode" aria-label="Toggle dark/light mode">
+        <button id="btn-theme-toggle" class="tactical-btn btn-ghost" title="Toggle Dark/Light Mode"
+          aria-label="Toggle dark/light mode">
           <svg class="btn-icon" id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5"></circle>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            <path
+              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
           </svg>
           <span id="theme-status-text">LIGHT MODE</span>
         </button>
 
         <!-- b) Audio ON/OFF button -->
-        <button id="btn-audio-toggle" class="tactical-btn btn-ghost" title="Toggle Emergency Audio Feedback" aria-label="Audio alerts sound toggle">
+        <button id="btn-audio-toggle" class="tactical-btn btn-ghost" title="Toggle Emergency Audio Feedback"
+          aria-label="Audio alerts sound toggle">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path id="audio-icon-path" d="M11 5L6 9H2v6h4l5 4V5z M15.54 8.46a5 5 0 0 1 0 7.07 M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            <path id="audio-icon-path"
+              d="M11 5L6 9H2v6h4l5 4V5z M15.54 8.46a5 5 0 0 1 0 7.07 M19.07 4.93a10 10 0 0 1 0 14.14" />
           </svg>
           <span id="audio-status-text">AUDIO ON</span>
         </button>
 
         <!-- c) System Status Indicator -->
-        <div class="header-status-indicator status-online" id="header-status-indicator" role="status" aria-live="polite">
+        <div class="header-status-indicator status-online" id="header-status-indicator" role="status"
+          aria-live="polite">
           <span class="status-dot" id="status-dot" aria-hidden="true"></span>
           <span class="status-label" id="status-label">SYSTEM: ACTIVE</span>
         </div>
@@ -96,7 +104,8 @@
       <div class="banner-content">
         <span class="banner-icon">⚠️</span>
         <strong class="banner-title">CRITICAL SOS BROADCAST:</strong>
-        <span class="banner-msg" id="banner-message">ACTIVE DURESS BEACON DETECTED IN SECTOR 4B. TACTICAL FIRST RESPONDERS DISPATCHED.</span>
+        <span class="banner-msg" id="banner-message">ACTIVE DURESS BEACON DETECTED IN SECTOR 4B. TACTICAL FIRST
+          RESPONDERS DISPATCHED.</span>
         <span class="banner-timer font-mono" id="banner-incident-time">00:01:24</span>
       </div>
       <div class="banner-actions">
@@ -115,14 +124,14 @@
       <!-- ======================================================================= -->
       <section class="camera-hero-section" aria-labelledby="cam-feed-title">
         <div class="tactical-panel camera-feed-panel">
-          
+
           <!-- Camera Feed Header & Controls -->
           <div class="panel-header camera-header">
             <div class="cam-info-left">
               <div class="cam-icon-tag" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M23 7l-7 5 7 5V7z"/>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
               </div>
               <div class="cam-title-wrap">
@@ -163,19 +172,22 @@
 
           <!-- Video / Canvas Feed Viewport -->
           <div class="camera-viewport-wrapper" id="camera-feed-container">
-            <img id="main-camera-feed" src="http://127.0.0.1:8001/video_feed" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;" alt="AI Live Feed">
+            <img id="main-camera-feed" src="https://sos-ai-sensor-1.onrender.com/video_feed"
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;" alt="AI Live Feed">
 
             <!-- Interactive On-Screen Floating Camera Controls -->
             <div class="camera-floating-controls" role="toolbar" aria-label="Camera controls">
               <!-- Vision Mode Selector -->
               <div class="control-group vision-modes" role="radiogroup" aria-label="Surveillance Vision Mode">
-                <button class="hud-ctrl-btn active" id="btn-vision-optical" data-mode="optical" title="Standard Optical Color">
+                <button class="hud-ctrl-btn active" id="btn-vision-optical" data-mode="optical"
+                  title="Standard Optical Color">
                   <span>OPTICAL</span>
                 </button>
                 <button class="hud-ctrl-btn" id="btn-vision-nv" data-mode="nv" title="Night Vision Infra-Red">
                   <span>NIGHT VISION</span>
                 </button>
-                <button class="hud-ctrl-btn" id="btn-vision-thermal" data-mode="thermal" title="FLIR Thermal Heat Signature">
+                <button class="hud-ctrl-btn" id="btn-vision-thermal" data-mode="thermal"
+                  title="FLIR Thermal Heat Signature">
                   <span>THERMAL FLIR</span>
                 </button>
               </div>
@@ -184,12 +196,15 @@
               <div class="control-group ptz-controls" aria-label="Pan Tilt Zoom">
                 <button class="hud-icon-btn" id="btn-pan-left" title="Pan Left" aria-label="Pan camera left">◀</button>
                 <button class="hud-icon-btn" id="btn-tilt-up" title="Tilt Up" aria-label="Tilt camera up">▲</button>
-                <button class="hud-icon-btn" id="btn-tilt-down" title="Tilt Down" aria-label="Tilt camera down">▼</button>
-                <button class="hud-icon-btn" id="btn-pan-right" title="Pan Right" aria-label="Pan camera right">▶</button>
+                <button class="hud-icon-btn" id="btn-tilt-down" title="Tilt Down"
+                  aria-label="Tilt camera down">▼</button>
+                <button class="hud-icon-btn" id="btn-pan-right" title="Pan Right"
+                  aria-label="Pan camera right">▶</button>
                 <div class="ctrl-sep"></div>
                 <button class="hud-icon-btn" id="btn-zoom-in" title="Zoom In (+)" aria-label="Zoom in">+</button>
                 <button class="hud-icon-btn" id="btn-zoom-out" title="Zoom Out (-)" aria-label="Zoom out">−</button>
-                <button class="hud-icon-btn btn-reset" id="btn-cam-reset" title="Reset View" aria-label="Reset camera view">RESET</button>
+                <button class="hud-icon-btn btn-reset" id="btn-cam-reset" title="Reset View"
+                  aria-label="Reset camera view">RESET</button>
               </div>
 
               <!-- Camera Auxiliary Tools -->
@@ -241,15 +256,15 @@
         <!-- ALERT LOG PANEL (Required: Time, Location, Threat Level Details)     -->
         <!-- ===================================================================== -->
         <section class="tactical-panel alert-log-panel" aria-labelledby="alert-log-heading">
-          
+
           <!-- Alert Log Header & Threat Statistics -->
           <div class="panel-header alert-panel-header">
             <div class="alert-header-title-block">
               <div class="alert-icon-ring" aria-hidden="true">
                 <span class="alert-bell-pulse"></span>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
               </div>
               <div>
@@ -284,10 +299,12 @@
 
             <!-- Quick Action Triggers: New SOS Dispatch & Purge Logs -->
             <div class="alert-header-actions" style="display: flex; align-items: center; gap: 8px;">
-              <button id="btn-open-create-alert" class="tactical-btn btn-secondary-accent" title="Manually dispatch or register new emergency alert">
+              <button id="btn-open-create-alert" class="tactical-btn btn-secondary-accent"
+                title="Manually dispatch or register new emergency alert">
                 <span>+ NEW SOS DISPATCH</span>
               </button>
-              <button id="btn-purge-alerts" class="tactical-btn btn-critical-solid" title="Purge all alert records and reset data">
+              <button id="btn-purge-alerts" class="tactical-btn btn-critical-solid"
+                title="Purge all alert records and reset data">
                 <span>PURGE LOGS</span>
               </button>
             </div>
@@ -322,12 +339,15 @@
             <!-- Search & Status Filter Controls -->
             <div class="filter-search-group">
               <div class="search-input-wrapper">
-                <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                <input type="text" id="alert-search-input" placeholder="Search by location, threat, ID or keyword..." aria-label="Search emergency alerts">
-                <button id="btn-clear-search" class="clear-search-btn" title="Clear search" aria-label="Clear search">✕</button>
+                <input type="text" id="alert-search-input" placeholder="Search by location, threat, ID or keyword..."
+                  aria-label="Search emergency alerts">
+                <button id="btn-clear-search" class="clear-search-btn" title="Clear search"
+                  aria-label="Clear search">✕</button>
               </div>
 
               <!-- Status Tab Selector -->
@@ -341,16 +361,20 @@
           </div>
 
           <!-- Alert Cards Container (Scrollable High-Contrast List) -->
-          <div class="alert-cards-container" id="alert-list-container" role="feed" aria-busy="false" aria-label="Emergency alerts feed"></div>
+          <div class="alert-cards-container" id="alert-list-container" role="feed" aria-busy="false"
+            aria-label="Emergency alerts feed"></div>
 
           <!-- Alert Log Footer / Batch Actions -->
           <div class="alert-log-footer">
             <div class="footer-status-text font-mono">
-              SHOWING <span id="visible-alert-count">0</span> OF <span id="total-pool-count">0</span> ALERTS • AUTO-REFRESH: 1 SEC
+              SHOWING <span id="visible-alert-count">0</span> OF <span id="total-pool-count">0</span> ALERTS •
+              AUTO-REFRESH: 1 SEC
             </div>
             <div class="footer-actions">
-              <button id="btn-ack-all" class="tactical-btn btn-ghost-sm" title="Acknowledge all pending active alerts">ACKNOWLEDGE ALL</button>
-              <button id="btn-export-log" class="tactical-btn btn-ghost-sm" title="Export incident log to JSON">EXPORT LOG</button>
+              <button id="btn-ack-all" class="tactical-btn btn-ghost-sm"
+                title="Acknowledge all pending active alerts">ACKNOWLEDGE ALL</button>
+              <button id="btn-export-log" class="tactical-btn btn-ghost-sm" title="Export incident log to JSON">EXPORT
+                LOG</button>
             </div>
           </div>
         </section>
@@ -359,7 +383,7 @@
         <!-- RIGHT PANEL: Geo-Spatial Radar, Tactical Map & Rapid Dispatch Hub     -->
         <!-- ===================================================================== -->
         <aside class="tactical-panel dispatch-telemetry-panel" aria-label="Geospatial radar and response dispatch">
-          
+
           <!-- Radar / Sector Geo-Spatial Interactive Map -->
           <div class="radar-module-box">
             <div class="radar-header">
@@ -373,10 +397,14 @@
             <div id="incident-map" style="width: 100%; height: 260px; border-radius: 6px; z-index: 1;"></div>
 
             <div class="radar-legend font-mono">
-              <span class="legend-item"><span class="legend-dot" style="background:#ff1744; box-shadow: 0 0 5px #ff1744;"></span> CRITICAL</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#ff9100; box-shadow: 0 0 5px #ff9100;"></span> HIGH</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#ffea00; box-shadow: 0 0 5px #ffea00;"></span> MODERATE</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#00e5ff; box-shadow: 0 0 5px #00e5ff;"></span> LOW</span>
+              <span class="legend-item"><span class="legend-dot"
+                  style="background:#ff1744; box-shadow: 0 0 5px #ff1744;"></span> CRITICAL</span>
+              <span class="legend-item"><span class="legend-dot"
+                  style="background:#ff9100; box-shadow: 0 0 5px #ff9100;"></span> HIGH</span>
+              <span class="legend-item"><span class="legend-dot"
+                  style="background:#ffea00; box-shadow: 0 0 5px #ffea00;"></span> MODERATE</span>
+              <span class="legend-item"><span class="legend-dot"
+                  style="background:#00e5ff; box-shadow: 0 0 5px #00e5ff;"></span> LOW</span>
             </div>
           </div>
 
@@ -464,7 +492,8 @@
     <!-- ========================================================================= -->
 
     <!-- Create / Dispatch Alert Modal -->
-    <div class="tactical-modal-backdrop" id="modal-create-alert" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-create-title">
+    <div class="tactical-modal-backdrop" id="modal-create-alert" aria-hidden="true" role="dialog" aria-modal="true"
+      aria-labelledby="modal-create-title">
       <div class="tactical-modal-panel">
         <div class="modal-header">
           <div class="modal-title-wrap">
@@ -501,17 +530,20 @@
           <div class="form-row">
             <div class="form-group flex-1">
               <label for="input-location-name">LOCATION / ZONE NAME *</label>
-              <input type="text" id="input-location-name" class="tactical-input" placeholder="e.g. Sub-Level 2 - Chemical Depot B" required>
+              <input type="text" id="input-location-name" class="tactical-input"
+                placeholder="e.g. Sub-Level 2 - Chemical Depot B" required>
             </div>
             <div class="form-group flex-1">
               <label for="input-sector-code">SECTOR ID *</label>
-              <input type="text" id="input-sector-code" class="tactical-input" placeholder="e.g. Sector 4B" value="Sector 4B" required>
+              <input type="text" id="input-sector-code" class="tactical-input" placeholder="e.g. Sector 4B"
+                value="Sector 4B" required>
             </div>
           </div>
 
           <div class="form-group">
             <label for="input-details">INCIDENT DETAILS &amp; SENSOR READINGS</label>
-            <textarea id="input-details" class="tactical-textarea" rows="3" placeholder="Provide telemetry notes, operator badges involved, victim status, or immediate response instructions..."></textarea>
+            <textarea id="input-details" class="tactical-textarea" rows="3"
+              placeholder="Provide telemetry notes, operator badges involved, victim status, or immediate response instructions..."></textarea>
           </div>
 
           <div class="form-row">
@@ -544,7 +576,8 @@
     </div>
 
     <!-- Alert Detail & Dispatch Action Drawer / Modal -->
-    <div class="tactical-modal-backdrop" id="modal-alert-details" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-detail-title">
+    <div class="tactical-modal-backdrop" id="modal-alert-details" aria-hidden="true" role="dialog" aria-modal="true"
+      aria-labelledby="modal-detail-title">
       <div class="tactical-modal-panel modal-lg">
         <div class="modal-header">
           <div class="modal-title-wrap">
@@ -557,59 +590,88 @@
         <div class="modal-body-detail" id="modal-detail-body">
           <!-- Top Grid: Incident ID and Timestamp -->
           <div class="dossier-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-            <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div
+              style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">INCIDENT IDENTIFIER</div>
-              <div style="font-size: 1.1rem; font-weight: 700; color: #fff;" class="font-mono" id="dossier-incident-id">#--</div>
-              <div style="font-size: 0.75rem; color: var(--color-low); margin-top: 4px;" id="dossier-incident-title">--</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: #fff;" class="font-mono" id="dossier-incident-id">
+                #--</div>
+              <div style="font-size: 0.75rem; color: var(--color-low); margin-top: 4px;" id="dossier-incident-title">--
+              </div>
             </div>
 
-            <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
-              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">TIMESTAMP &amp; DURATION</div>
-              <div style="font-size: 0.9rem; font-weight: 600; color: #fff;" class="font-mono" id="dossier-timestamp">--:--:--</div>
-              <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;" id="dossier-elapsed">Elapsed: --</div>
+            <div
+              style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">TIMESTAMP &amp; DURATION
+              </div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: #fff;" class="font-mono" id="dossier-timestamp">
+                --:--:--</div>
+              <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;" id="dossier-elapsed">
+                Elapsed: --</div>
             </div>
           </div>
 
           <!-- Location & Coordinates -->
-          <div style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">LOCATION &amp; GEODETIC COORDINATES</div>
-            <div style="color: #fff; font-size: 0.9rem; font-weight: 600;" id="dossier-location">📍 Daffodil Smart City - Ashulia, Dhaka</div>
-            <div class="font-mono text-cyan" style="font-size: 0.75rem; margin-top: 2px;" id="dossier-coords">GPS: LAT 23.8769, LON 90.3204</div>
+          <div
+            style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">LOCATION
+              &amp; GEODETIC COORDINATES</div>
+            <div style="color: #fff; font-size: 0.9rem; font-weight: 600;" id="dossier-location">📍 Daffodil Smart City
+              - Ashulia, Dhaka</div>
+            <div class="font-mono text-cyan" style="font-size: 0.75rem; margin-top: 2px;" id="dossier-coords">GPS: LAT
+              23.8769, LON 90.3204</div>
           </div>
 
           <!-- OPTICAL SURVEILLANCE SNAPSHOT & INCIDENT TELEMETRY -->
-          <div id="dossier-telemetry-section" style="background: rgba(0,0,0,0.4); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.05em;">
+          <div id="dossier-telemetry-section"
+            style="background: rgba(0,0,0,0.4); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div
+              style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.05em;">
               <span>PRIMARY OPTICAL SNAPSHOT // INCIDENT VISUAL TELEMETRY</span>
-              <span id="dossier-snapshot-badge" style="color: #ff3366; font-size: 0.68rem; font-weight: 700; display: none;" class="font-mono">LIVE AI OPTICAL CAPTURE</span>
+              <span id="dossier-snapshot-badge"
+                style="color: #ff3366; font-size: 0.68rem; font-weight: 700; display: none;" class="font-mono">LIVE AI
+                OPTICAL CAPTURE</span>
             </div>
 
             <!-- Prominently Expanded Optical Snapshot Image Container -->
-            <div id="dossier-snapshot-container" style="display: none; width: 100%; border-radius: 6px; overflow: hidden; background: #050811; border: 1px solid rgba(255, 23, 68, 0.45); box-shadow: 0 0 24px rgba(255, 23, 68, 0.25); text-align: center;">
-              <img id="dossier-snapshot-img" src="" alt="Live Optical Incident Snapshot" style="width: 100%; max-height: 440px; min-height: 220px; object-fit: contain; display: block; margin: 0 auto; background: #070a10;">
+            <div id="dossier-snapshot-container"
+              style="display: none; width: 100%; border-radius: 6px; overflow: hidden; background: #050811; border: 1px solid rgba(255, 23, 68, 0.45); box-shadow: 0 0 24px rgba(255, 23, 68, 0.25); text-align: center;">
+              <img id="dossier-snapshot-img" src="" alt="Live Optical Incident Snapshot"
+                style="width: 100%; max-height: 440px; min-height: 220px; object-fit: contain; display: block; margin: 0 auto; background: #070a10;">
             </div>
 
             <!-- Fallback when no optical snapshot is available -->
-            <div id="dossier-snapshot-fallback" style="display: none; padding: 28px 16px; text-align: center; background: rgba(255, 23, 68, 0.05); border: 1px dashed rgba(255, 23, 68, 0.25); border-radius: 6px;">
+            <div id="dossier-snapshot-fallback"
+              style="display: none; padding: 28px 16px; text-align: center; background: rgba(255, 23, 68, 0.05); border: 1px dashed rgba(255, 23, 68, 0.25); border-radius: 6px;">
               <div style="font-size: 1.8rem; margin-bottom: 6px;">📷</div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: #fff; font-family: var(--font-tactical); letter-spacing: 0.06em;">NO OPTICAL SNAPSHOT AVAILABLE</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono);">Hardware camera feed was offline, disengaged, or occupied during distress detection.</div>
+              <div
+                style="font-size: 0.82rem; font-weight: 700; color: #fff; font-family: var(--font-tactical); letter-spacing: 0.06em;">
+                NO OPTICAL SNAPSHOT AVAILABLE</div>
+              <div
+                style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono);">
+                Hardware camera feed was offline, disengaged, or occupied during distress detection.</div>
             </div>
           </div>
 
           <!-- Incident Details -->
-          <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">INCIDENT LOG DETAILS</div>
-            <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-primary); margin: 0;" id="dossier-description">Emergency telemetry alert registered.</p>
+          <div
+            style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">INCIDENT
+              LOG DETAILS</div>
+            <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-primary); margin: 0;"
+              id="dossier-description">Emergency telemetry alert registered.</p>
           </div>
 
           <!-- Responder Matrix -->
-          <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">ASSIGNED RESPONDER MATRIX</div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;" id="dossier-assigned-unit">Rapid Squad Alpha</div>
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">ASSIGNED RESPONDER MATRIX
+              </div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;" id="dossier-assigned-unit">Rapid Squad
+                Alpha</div>
             </div>
-            <button type="button" class="tactical-btn btn-secondary-accent" id="btn-dossier-radio" onclick="alert('Dispatch radio transmission active on emergency channel 4');">
+            <button type="button" class="tactical-btn btn-secondary-accent" id="btn-dossier-radio"
+              onclick="alert('Dispatch radio transmission active on emergency channel 4');">
               DISPATCH RADIO
             </button>
           </div>
@@ -628,4 +690,5 @@
 
   <script src="js/app.js"></script>
 </body>
+
 </html>
