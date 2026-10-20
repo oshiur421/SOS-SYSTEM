@@ -4,20 +4,20 @@
    ========================================================================== */
 
 :root {
-  /* High-Contrast Tactical Emergency Dark Palette */
-  --bg-abyss: #05070a;
-  --bg-primary: #07090e;
-  --bg-secondary: #0c1017;
-  --bg-tertiary: #121824;
-  --bg-card: rgba(14, 20, 31, 0.88);
-  --bg-card-hover: rgba(22, 31, 48, 0.95);
-  --bg-glass-panel: rgba(12, 17, 26, 0.82);
+  /* High-Contrast ShurokkhaAI Tactical Emergency Dark Palette */
+  --bg-abyss: #030816;
+  --bg-primary: #091326;
+  --bg-secondary: #0E1C36;
+  --bg-tertiary: #0A1529;
+  --bg-card: #091326;
+  --bg-card-hover: #0E1C36;
+  --bg-glass-panel: rgba(9, 19, 38, 0.95);
 
-  /* Emergency Threat Alert Levels (High-Contrast & Visible in darkness) */
-  --color-critical: #ff1744;          /* Level 1: Immediate Danger / Duress */
-  --color-critical-glow: rgba(255, 23, 68, 0.6);
-  --color-critical-bg: rgba(255, 23, 68, 0.16);
-  --color-critical-border: rgba(255, 23, 68, 0.65);
+  /* Emergency Threat Alert Levels */
+  --color-critical: #FF3B30;          /* Level 1: Immediate Danger / Duress */
+  --color-critical-glow: rgba(255, 59, 48, 0.6);
+  --color-critical-bg: rgba(255, 59, 48, 0.16);
+  --color-critical-border: #FF3B30;
 
   --color-high: #ff6d00;              /* Level 2: High Threat / Security Breach */
   --color-high-glow: rgba(255, 109, 0, 0.55);
@@ -29,33 +29,39 @@
   --color-moderate-bg: rgba(255, 214, 0, 0.14);
   --color-moderate-border: rgba(255, 214, 0, 0.65);
 
-  --color-low: #00e5ff;               /* Level 4: Guarded / Advisory */
-  --color-low-glow: rgba(0, 229, 255, 0.5);
-  --color-low-bg: rgba(0, 229, 255, 0.14);
-  --color-low-border: rgba(0, 229, 255, 0.65);
+  --color-low: #1DA1F2;               /* Level 4: Guarded / Advisory */
+  --color-low-glow: rgba(29, 161, 242, 0.5);
+  --color-low-bg: rgba(29, 161, 242, 0.14);
+  --color-low-border: #1DA1F2;
 
-  --color-normal: #00e676;            /* Operational / Safe / All Clear */
-  --color-normal-glow: rgba(0, 230, 118, 0.5);
-  --color-normal-bg: rgba(0, 230, 118, 0.14);
-  --color-normal-border: rgba(0, 230, 118, 0.65);
+  --color-normal: #00D25B;            /* Operational / Safe / All Clear */
+  --color-normal-glow: rgba(0, 210, 91, 0.5);
+  --color-normal-bg: rgba(0, 210, 91, 0.14);
+  --color-normal-border: #00D25B;
+
+  /* Theme Accents */
+  --color-shurokkha-blue: #0057FF;
+  --color-shurokkha-cyan: #1DA1F2;
+  --color-neon-green: #00D25B;
+  --color-alert-red: #FF3B30;
 
   /* Typography Colors */
   --text-white: #ffffff;
-  --text-primary: #f1f5f9;
+  --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --text-dark: #07090e;
+  --text-dark: #030816;
 
   /* Tactical Grid & Borders */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
-  --border-bright: rgba(255, 255, 255, 0.28);
-  --border-hud: rgba(0, 229, 255, 0.4);
+  --border-subtle: #1B2C4B;
+  --border-medium: #1B2C4B;
+  --border-bright: #1E3050;
+  --border-hud: #1DA1F2;
 
   /* Elevation Shadows & Glows */
-  --shadow-panel: 0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.07);
-  --shadow-elevated: 0 20px 40px -10px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 229, 255, 0.15);
-  --shadow-critical: 0 0 35px rgba(255, 23, 68, 0.35);
+  --shadow-panel: 0 10px 30px -5px rgba(3, 8, 22, 0.8), 0 0 1px 1px #1B2C4B;
+  --shadow-elevated: 0 20px 40px -10px rgba(3, 8, 22, 0.9), 0 0 15px rgba(29, 161, 242, 0.15);
+  --shadow-critical: 0 0 35px rgba(255, 59, 48, 0.35);
 
   /* Typography Stacks */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -69,8 +75,8 @@
   --radius-full: 9999px;
 
   /* Scrollbar Theme conforming to modern-web-guidance */
-  --scrollbar-thumb: #233149;
-  --scrollbar-track: #090d14;
+  --scrollbar-thumb: #1E3050;
+  --scrollbar-track: #091326;
 }
 
 /* ==========================================================================
@@ -91,11 +97,11 @@ html {
 
 body.dark-theme {
   min-height: 100vh;
-  background-color: var(--bg-abyss);
+  background-color: #030816;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(18, 30, 49, 0.5) 0%, transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    radial-gradient(circle at 50% 0%, #0A1E46 0%, #050E24 60%, transparent 100%),
+    linear-gradient(rgba(27, 44, 75, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 44, 75, 0.25) 1px, transparent 1px);
   background-size: 100% 100%, 32px 32px, 32px 32px;
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -347,15 +353,15 @@ body.light-mode .search-input {
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--text-white, #ffffff);
+  color: #1DA1F2;
   margin: 0;
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   text-shadow: 
-    0 0 6px rgba(0, 229, 255, 0.65),
-    0 0 14px rgba(0, 229, 255, 0.45),
-    0 0 24px rgba(0, 229, 255, 0.25);
+    0 0 6px rgba(29, 161, 242, 0.65),
+    0 0 14px rgba(29, 161, 242, 0.45),
+    0 0 24px rgba(29, 161, 242, 0.25);
   user-select: none;
 }
 
@@ -2499,8 +2505,8 @@ body.light-mode .search-input {
 /* LEAFLET TACTICAL DARK THEME STYLING                                      */
 /* ========================================================================= */
 #incident-map {
-  background: #07090e !important;
-  border: 1px solid var(--border-medium);
+  background: #030816 !important;
+  border: 1px solid #1B2C4B;
   overflow: hidden;
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
 }
@@ -2511,19 +2517,19 @@ body.light-mode .search-input {
 }
 
 .leaflet-container {
-  background: #07090e !important;
+  background: #030816 !important;
   font-family: var(--font-tactical), 'Chakra Petch', sans-serif !important;
 }
 
 .leaflet-bar a {
-  background-color: #0f172a !important;
-  border-color: #1e293b !important;
-  color: #38bdf8 !important;
+  background-color: #0057FF !important;
+  border-color: #0057FF !important;
+  color: #FFFFFF !important;
 }
 
 .leaflet-bar a:hover {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
+  background-color: #0046d1 !important;
+  color: #FFFFFF !important;
 }
 
 .leaflet-popup-content-wrapper,
@@ -2563,4 +2569,526 @@ body.light-mode .search-input {
 .tactical-map-tooltip::before {
   border-top-color: #38bdf8 !important;
 }
+
+/* ==========================================================================
+   SHUROKKHA-AI DESIGN SYSTEM THEME: DARK NAVY, BRIGHT BLUE & NEON GREEN
+   Strict Color Palette Specifications for SOS SYSTEM Dashboard
+   ========================================================================== */
+
+/* 1. Global Background & Borders */
+body.dark-theme {
+  background-color: #030816 !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, #0A1E46 0%, #050E24 60%, transparent 100%),
+    linear-gradient(rgba(27, 44, 75, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 44, 75, 0.25) 1px, transparent 1px) !important;
+  background-size: 100% 100%, 32px 32px, 32px 32px !important;
+}
+
+.tactical-panel,
+.camera-feed-panel,
+.alert-log-panel,
+.radar-module-box,
+.dispatch-module-box,
+.system-mesh-box,
+.tactical-modal-panel,
+.alert-card,
+.alert-row {
+  border-color: #1B2C4B !important;
+}
+
+/* 2. Top Header Bar (SOS SYSTEM) */
+.tactical-header {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.tactical-header h2,
+.header-left h2,
+.cyber-title {
+  color: #1DA1F2 !important;
+  text-shadow: 0 0 10px rgba(29, 161, 242, 0.5), 0 0 20px rgba(29, 161, 242, 0.25) !important;
+}
+
+.cyber-title::after {
+  color: #1DA1F2 !important;
+  text-shadow: 2px 0 #1DA1F2 !important;
+}
+
+#btn-theme-toggle,
+#btn-audio-toggle,
+.tactical-header .btn-ghost {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #FFFFFF !important;
+}
+
+#btn-theme-toggle:hover,
+#btn-audio-toggle:hover,
+.tactical-header .btn-ghost:hover {
+  background: #0E1C36 !important;
+  border-color: #1DA1F2 !important;
+  color: #FFFFFF !important;
+}
+
+.header-status-indicator.status-online,
+#header-status-indicator.status-online {
+  background: #0A2229 !important;
+  border: 1px solid #14463E !important;
+  color: #00D25B !important;
+}
+
+.header-status-indicator.status-online .status-dot,
+#header-status-indicator .status-dot,
+#status-dot {
+  background: #00D25B !important;
+  box-shadow: 0 0 10px #00D25B, 0 0 18px rgba(0, 210, 91, 0.8) !important;
+}
+
+.header-status-indicator.status-online .status-label,
+#header-status-indicator .status-label,
+#status-label {
+  color: #00D25B !important;
+}
+
+/* 3. Live Surveillance Panel (LIVE SURVEILLANCE & OPTICAL TELEMETRY) */
+.camera-feed-panel {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.camera-header {
+  background: #091326 !important;
+  border-bottom: 1px solid #1B2C4B !important;
+}
+
+.cam-icon-tag {
+  background: #0F2849 !important;
+  color: #1DA1F2 !important;
+}
+
+.cam-icon-tag svg {
+  stroke: #1DA1F2 !important;
+}
+
+.cam-heading,
+#cam-feed-title {
+  color: #FFFFFF !important;
+}
+
+.cam-location-subtitle,
+#active-cam-title {
+  color: #1DA1F2 !important;
+}
+
+.cam-nav-tabs {
+  background: #0A1529 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.cam-tab.active,
+.hud-ctrl-btn.active {
+  background: #0057FF !important;
+  border: 1px solid #0057FF !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 12px rgba(0, 87, 255, 0.5) !important;
+}
+
+.cam-tab.active .tab-dot {
+  background: #FFFFFF !important;
+  box-shadow: 0 0 6px #FFFFFF !important;
+}
+
+.cam-tab:not(.active) {
+  background: #0E1C36 !important;
+  border: 1px solid #1B2C4B !important;
+  color: #94A3B8 !important;
+}
+
+.cam-tab:not(.active):hover {
+  background: #1B2C4B !important;
+  color: #FFFFFF !important;
+}
+
+.camera-floating-controls {
+  background: rgba(9, 19, 38, 0.94) !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.hud-ctrl-btn:not(.active),
+.hud-icon-btn {
+  background: #0E1C36 !important;
+  border: 1px solid #1B2C4B !important;
+  color: #94A3B8 !important;
+}
+
+.hud-ctrl-btn:not(.active):hover,
+.hud-icon-btn:hover {
+  background: #1B2C4B !important;
+  border-color: #1DA1F2 !important;
+  color: #FFFFFF !important;
+}
+
+.hud-icon-btn:hover {
+  background: #0057FF !important;
+  border-color: #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+.btn-bullet {
+  background: #00D25B !important;
+  box-shadow: 0 0 6px #00D25B !important;
+}
+
+.fps-badge,
+#telemetry-fps {
+  color: #00D25B !important;
+  border-color: rgba(0, 210, 91, 0.35) !important;
+}
+
+.rec-badge,
+#telemetry-quality {
+  background: rgba(255, 59, 48, 0.16) !important;
+  border-color: rgba(255, 59, 48, 0.5) !important;
+  color: #FFFFFF !important;
+}
+
+.rec-blink-dot {
+  background: #FF3B30 !important;
+  box-shadow: 0 0 8px #FF3B30 !important;
+}
+
+.camera-footer-telemetry {
+  background: #091326 !important;
+  border-top: 1px solid #1B2C4B !important;
+}
+
+/* 4. Emergency Alert Log (EMERGENCY ALERT LOG) */
+.alert-log-panel {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.alert-panel-header {
+  background: #091326 !important;
+  border-bottom: 1px solid #1B2C4B !important;
+}
+
+.alert-cards-container {
+  background: #0E1C36 !important;
+}
+
+#btn-open-create-alert,
+.btn-secondary-accent {
+  background: #0057FF !important;
+  border: 1px solid #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+#btn-open-create-alert:hover,
+.btn-secondary-accent:hover {
+  background: #0046d1 !important;
+  border-color: #1DA1F2 !important;
+  box-shadow: 0 0 14px rgba(0, 87, 255, 0.5) !important;
+}
+
+#btn-purge-alerts,
+.btn-critical-solid {
+  background: #FF3B30 !important;
+  border: 1px solid #FF3B30 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 16px rgba(255, 59, 48, 0.4) !important;
+}
+
+#btn-purge-alerts:hover,
+.btn-critical-solid:hover {
+  background: #e02d23 !important;
+  border-color: #e02d23 !important;
+  box-shadow: 0 0 24px rgba(255, 59, 48, 0.7) !important;
+}
+
+.threat-crit {
+  border-color: #FF3B30 !important;
+  color: #FFFFFF !important;
+}
+
+.threat-crit .stat-dot,
+.dot-critical {
+  background: #FF3B30 !important;
+  box-shadow: 0 0 8px #FF3B30 !important;
+}
+
+.threat-chip.chip-critical .chip-dot {
+  background: #FF3B30 !important;
+}
+
+.threat-chip.chip-critical.active {
+  background: #FF3B30 !important;
+  border-color: #FF3B30 !important;
+  color: #FFFFFF !important;
+}
+
+.badge-threat-critical {
+  background: #FF3B30 !important;
+  color: #FFFFFF !important;
+}
+
+.alert-filter-toolbar {
+  background: #0A1529 !important;
+  border-bottom: 1px solid #1B2C4B !important;
+}
+
+#alert-search-input {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #FFFFFF !important;
+}
+
+#alert-search-input:focus {
+  border-color: #1DA1F2 !important;
+  box-shadow: 0 0 8px rgba(29, 161, 242, 0.4) !important;
+}
+
+.threat-chip {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #94A3B8 !important;
+}
+
+.threat-chip:hover {
+  background: #0E1C36 !important;
+  border-color: #1B2C4B !important;
+  color: #FFFFFF !important;
+}
+
+.threat-chip.active {
+  background: #0057FF !important;
+  border-color: #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+.threat-chip.chip-critical.active {
+  background: #FF3B30 !important;
+  border-color: #FF3B30 !important;
+  color: #FFFFFF !important;
+}
+
+.status-tab-selector {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+}
+
+.status-tab-btn {
+  background: #0A1529 !important;
+  border: 1px solid transparent !important;
+  color: #94A3B8 !important;
+}
+
+.status-tab-btn:hover {
+  color: #FFFFFF !important;
+}
+
+.status-tab-btn.active {
+  background: #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+#btn-ack-all,
+#btn-export-log,
+.alert-log-footer .btn-ghost-sm {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #94A3B8 !important;
+}
+
+#btn-ack-all:hover,
+#btn-export-log:hover,
+.alert-log-footer .btn-ghost-sm:hover {
+  background: #0E1C36 !important;
+  border-color: #1DA1F2 !important;
+  color: #FFFFFF !important;
+}
+
+.alert-empty-state {
+  background: #0E1C36 !important;
+}
+
+.alert-empty-state .empty-icon {
+  color: #1DA1F2 !important;
+  text-shadow: 0 0 14px rgba(29, 161, 242, 0.7) !important;
+  filter: drop-shadow(0 0 10px rgba(29, 161, 242, 0.6)) !important;
+}
+
+.alert-empty-state .font-bold {
+  color: #94A3B8 !important;
+}
+
+.alert-empty-state p {
+  color: #64748B !important;
+}
+
+.alert-row,
+.alert-card {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.alert-row:hover,
+.alert-card:hover {
+  background: #0E1C36 !important;
+  border-color: #1DA1F2 !important;
+}
+
+.alert-log-footer {
+  background: #091326 !important;
+  border-top: 1px solid #1B2C4B !important;
+}
+
+/* 5. Right Sidebar Panels */
+.radar-module-box,
+.dispatch-module-box,
+.system-mesh-box {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+#incident-map {
+  background: #030816 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.leaflet-bar a,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background-color: #0057FF !important;
+  border-color: #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+.leaflet-bar a:hover,
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background-color: #0046d1 !important;
+  color: #FFFFFF !important;
+}
+
+.unit-card {
+  background: #0E1C36 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.unit-card:hover {
+  background: #112344 !important;
+  border-color: #1E3050 !important;
+}
+
+.unit-action-btn {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #FFFFFF !important;
+}
+
+.unit-action-btn:hover {
+  background: #0057FF !important;
+  border-color: #0057FF !important;
+  color: #FFFFFF !important;
+}
+
+.units-available {
+  color: #00D25B !important;
+}
+
+.unit-status-tag.status-standby {
+  background: rgba(0, 210, 91, 0.16) !important;
+  border: 1px solid #00D25B !important;
+  color: #00D25B !important;
+}
+
+.text-green {
+  color: #00D25B !important;
+}
+
+.system-mesh-box .module-header .text-cyan,
+.system-mesh-box .module-header span:not(.module-title) {
+  color: #1DA1F2 !important;
+}
+
+.telemetry-cell {
+  background: #0E1C36 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+/* 6. Typography Hierarchy */
+.panel-title,
+.module-title,
+.cam-heading,
+.modal-title,
+.unit-name,
+.hud-val,
+.cam-tab.active,
+.hud-ctrl-btn.active,
+.threat-chip.active,
+.status-tab-btn.active {
+  color: #FFFFFF !important;
+}
+
+.text-secondary,
+.panel-subtitle,
+.unit-meta,
+.radar-legend,
+.telemetry-item .t-value,
+.alert-source,
+.cam-tab:not(.active),
+.hud-ctrl-btn:not(.active),
+.threat-chip:not(.active),
+.status-tab-btn:not(.active) {
+  color: #94A3B8 !important;
+}
+
+.text-muted,
+.footer-status-text,
+.alert-log-footer,
+.t-label,
+.cell-label,
+.filter-group-label,
+.radar-range {
+  color: #64748B !important;
+}
+
+/* Modal and Dialog Consistency */
+.tactical-modal-panel {
+  background: #091326 !important;
+  border: 1px solid #1B2C4B !important;
+}
+
+.modal-header {
+  background: #091326 !important;
+  border-bottom: 1px solid #1B2C4B !important;
+}
+
+.modal-footer {
+  background: #091326 !important;
+  border-top: 1px solid #1B2C4B !important;
+}
+
+.tactical-input,
+.tactical-select,
+.tactical-textarea {
+  background: #0A1529 !important;
+  border: 1px solid #1E3050 !important;
+  color: #FFFFFF !important;
+}
+
+.tactical-input:focus,
+.tactical-select:focus,
+.tactical-textarea:focus {
+  border-color: #1DA1F2 !important;
+  box-shadow: 0 0 8px rgba(29, 161, 242, 0.4) !important;
+}
+
+.tactical-select option {
+  background: #0A1529 !important;
+  color: #FFFFFF !important;
+}
+
 
